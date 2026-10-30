@@ -10,35 +10,45 @@ const progressInterval = setInterval(() => {
     
     if (progress >= 100) {
         clearInterval(progressInterval);
-        document.getElementById('loading-screen').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('loading-screen').style.display = 'none';
-            document.getElementById('lobby-menu').style.display = 'block';
-            gameState = "LOBBY";
-        }, 500);
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                const lobbyMenu = document.getElementById('lobby-menu');
+                if (lobbyMenu) lobbyMenu.style.display = 'block';
+                gameState = "LOBBY";
+            }, 500);
+        }
     }
 }, 50);
 
 // Connect click event to the main Play Button
-document.getElementById('play-button').addEventListener('click', () => {
-    document.body.requestPointerLock();
-});
+const playBtn = document.getElementById('play-button');
+if (playBtn) {
+    playBtn.addEventListener('click', () => {
+        document.body.requestPointerLock();
+    });
+}
 
 // Capture pointer lock status modifications cleanly to stop click-freeze bugs
 document.addEventListener('pointerlockchange', () => {
+    const lobbyMenu = document.getElementById('lobby-menu');
+    const gameHud = document.getElementById('game-hud');
+    
     if (document.pointerLockElement === document.body) {
-        document.getElementById('lobby-menu').style.display = 'none';
-        document.getElementById('game-hud').style.display = 'block';
-        if(gameState === "LOBBY") {
+        if (lobbyMenu) lobbyMenu.style.display = 'none';
+        if (gameHud) gameHud.style.display = 'block';
+        if (gameState === "LOBBY") {
             gameState = "PLAYING";
             // Set position way up high to simulate jumping from the Battle Bus!
             camera.position.set(0, 90, 0); 
             player.velocity.y = -0.15; // Set downward skydiving velocity
         }
     } else {
-        if(gameState === "PLAYING") {
-            document.getElementById('lobby-menu').style.display = 'block';
-            document.getElementById('game-hud').style.display = 'none';
+        if (gameState === "PLAYING") {
+            if (lobbyMenu) lobbyMenu.style.display = 'block';
+            if (gameHud) gameHud.style.display = 'none';
             gameState = "LOBBY";
         }
     }
@@ -73,7 +83,7 @@ const treeLeavesGeo = new THREE.SphereGeometry(1.8, 6, 6);
 const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a3d28 });
 const leavesMat = new THREE.MeshStandardMaterial({ color: 0x224411 });
 
-for(let i=0; i<60; i++) {
+for (let i = 0; i < 60; i++) {
     const x = (Math.random() - 0.5) * 300;
     const z = (Math.random() - 0.5) * 300;
     
@@ -97,7 +107,7 @@ const player = {
     mats: 100
 };
 
-// Capture Keyboard inputs safely
+// FIXED: Capture Keyboard inputs safely using native valid toLowerCase() loops
 document.addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
     if (k === 'w') player.keys.w = true;
@@ -148,7 +158,7 @@ document.addEventListener('mousedown', (e) => {
         wall.position.x = Math.round((camera.position.x + dir.x * 6) / 4) * 4;
         wall.position.z = Math.round((camera.position.z + dir.z * 6) / 4) * 4;
         wall.position.y = Math.round((camera.position.y + dir.y * 4) / 4) * 4;
-        if(wall.position.y < 2.0) wall.position.y = 2.0; // Floor safety stop
+        if (wall.position.y < 2.0) wall.position.y = 2.0; // Floor safety stop
         
         if (Math.abs(dir.x) > Math.abs(dir.z)) wall.rotation.y = Math.PI / 2;
         
@@ -156,7 +166,8 @@ document.addEventListener('mousedown', (e) => {
         structures.push(wall);
         
         player.mats -= 10;
-        document.getElementById('mats-val').innerText = player.mats;
+        const matsVal = document.getElementById('mats-val');
+        if (matsVal) matsVal.innerText = player.mats;
     }
     
     // RIGHT CLICK: Fire Bullet Tracers
@@ -183,7 +194,6 @@ function animate() {
     requestAnimationFrame(animate);
 
     if (gameState === "PLAYING" && document.pointerLockElement === document.body) {
-        // Core horizontal orientation computation
         const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
         forward.y = 0; forward.normalize();
         const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
@@ -200,7 +210,6 @@ function animate() {
 
         // Apply Vertical Jump Matrices & Skydive Gravity drops
         if (camera.position.y > player.height) {
-            // Skydive mode vs standard land fall speed
             let gravity = (camera.position.y > 15) ? 0.05 : 0.012; 
             player.velocity.y -= gravity;
         } else if (player.keys.space && player.canJump) {
