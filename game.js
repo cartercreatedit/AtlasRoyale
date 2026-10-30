@@ -1,79 +1,103 @@
-// ── 1. GLOBAL ENGINE INITIALIZATION ─────────────────────────
+// ── 1. LIFECYCLE STATE MANAGER ─────────────────────────────
+let gameState = "LOADING"; 
+
+// Run a mock loading bar sequence
+let progress = 0;
+const progressInterval = setInterval(() => {
+    progress += 2.5;
+    const bar = document.getElementById('progress-bar');
+    if (bar) bar.style.width = progress + '%';
+    
+    if (progress >= 100) {
+        clearInterval(progressInterval);
+        document.getElementById('loading-screen').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('lobby-menu').style.display = 'block';
+            gameState = "LOBBY";
+        }, 500);
+    }
+}, 50);
+
+// Connect click event to the main Play Button
+document.getElementById('play-button').addEventListener('click', () => {
+    document.body.requestPointerLock();
+});
+
+// Capture pointer lock status modifications cleanly to stop click-freeze bugs
+document.addEventListener('pointerlockchange', () => {
+    if (document.pointerLockElement === document.body) {
+        document.getElementById('lobby-menu').style.display = 'none';
+        document.getElementById('game-hud').style.display = 'block';
+        if(gameState === "LOBBY") {
+            gameState = "PLAYING";
+            // Set position way up high to simulate jumping from the Battle Bus!
+            camera.position.set(0, 90, 0); 
+            player.velocity.y = -0.15; // Set downward skydiving velocity
+        }
+    } else {
+        if(gameState === "PLAYING") {
+            document.getElementById('lobby-menu').style.display = 'block';
+            document.getElementById('game-hud').style.display = 'none';
+            gameState = "LOBBY";
+        }
+    }
+});
+
+// ── 2. CORE 3D THREE.JS WORLD STORAGE ENGINE ────────────────
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0f1423); // OG Twilight Blue Sky
-scene.fog = new THREE.FogExp2(0x0f1423, 0.012);
+scene.background = new THREE.Color(0x4a75a0); // Classic OG Skyline Blue
+scene.fog = new THREE.FogExp2(0x4a75a0, 0.01);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
 // Lighting Matrix
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-scene.add(ambientLight);
-const sunLight = new THREE.DirectionalLight(0xffaa66, 0.9); // OG Sunset Tint
-sunLight.position.set(40, 60, 20);
-scene.add(sunLight);
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const sun = new THREE.DirectionalLight(0xffffff, 0.7);
+sun.position.set(30, 80, 40);
+scene.add(sun);
 
-// ── 2. OG ENVIRONMENT & TERRAIN CONFIGURATION ────────────────
-// Floor Map Matrix
-const floorGeo = new THREE.PlaneGeometry(400, 400, 40, 40);
+// Map Grass Environment Floor layout
+const floorGeo = new THREE.PlaneGeometry(500, 500, 50, 50);
 floorGeo.rotateX(-Math.PI / 2);
-const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e351f, roughness: 0.8 }); // Loot Lake / Dusty Grass Green
+const floorMat = new THREE.MeshStandardMaterial({ color: 0x345924, roughness: 0.9 });
 const floor = new THREE.Mesh(floorGeo, floorMat);
 scene.add(floor);
 
-// Simple Loot Box Spawners (OG Chest Proxies)
-const chestGeo = new THREE.BoxGeometry(2, 1.5, 1.5);
-const chestMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.5 });
-for(let i=0; i<15; i++) {
-    const chest = new THREE.Mesh(chestGeo, chestMat);
-    chest.position.set((Math.random()-0.5)*150, 0.75, (Math.random()-0.5)*150);
-    scene.add(chest);
+// Generate procedural 3D Green Cylinder Trees across the map
+const treeGeo = new THREE.CylinderGeometry(0.2, 0.8, 4, 5);
+const treeLeavesGeo = new THREE.SphereGeometry(1.8, 6, 6);
+const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a3d28 });
+const leavesMat = new THREE.MeshStandardMaterial({ color: 0x224411 });
+
+for(let i=0; i<60; i++) {
+    const x = (Math.random() - 0.5) * 300;
+    const z = (Math.random() - 0.5) * 300;
+    
+    const trunk = new THREE.Mesh(treeGeo, trunkMat);
+    trunk.position.set(x, 2, z);
+    
+    const leaves = new THREE.Mesh(treeLeavesGeo, leavesMat);
+    leaves.position.set(x, 4.5, z);
+    
+    scene.add(trunk);
+    scene.add(leaves);
 }
 
-// ── 3. OPERATOR CONTROLS & PHYSICAL STATE ───────────────────
+// ── 3. OPERATOR CONTROLS SYSTEM BINDINGS ────────────────────
 const player = {
     height: 2.0,
-    speed: 0.18,
+    speed: 0.2,
     velocity: new THREE.Vector3(),
     keys: { w: false, a: false, s: false, d: false, space: false },
     canJump: true,
-    mats: 100,
-    health: 100
+    mats: 100
 };
 
-camera.position.set(0, player.height, 0);
-
-// Pointer Lock Mouse Control Integration
-const blocker = document.getElementById('blocker');
-document.body.addEventListener('click', () => {
-    document.body.requestPointerLock();
-});
-
-document.addEventListener('pointerlockchange', () => {
-    if (document.pointerLockElement === document.body) {
-        blocker.style.display = 'none';
-    } else {
-        blocker.style.display = 'flex';
-    }
-});
-
-// Camera Mouse Rotation Processing
-let yaw = 0, pitch = 0;
-document.addEventListener('mousemove', (e) => {
-    if (document.pointerLockElement !== document.body) return;
-    yaw -= e.movementX * 0.0022;
-    pitch -= e.movementY * 0.0022;
-    pitch = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, pitch));
-    
-    camera.rotation.set(0, 0, 0);
-    camera.rotateY(yaw);
-    camera.rotateX(pitch);
-});
-
-// Track Input Framework Bindings
+// Capture Keyboard inputs safely
 document.addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
     if (k === 'w') player.keys.w = true;
@@ -91,91 +115,102 @@ document.addEventListener('keyup', (e) => {
     if (e.key === ' ') player.keys.space = false;
 });
 
-// ── 4. FORTNITE OG BUILDING & WEAPONS SYSTEM ─────────────────
-const buildStructures = [];
-const wallGeo = new THREE.BoxGeometry(4, 4, 0.4);
-const wallMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 }); // OG Wood Texture Color
-
-// Tactical Event Click Handler
-document.addEventListener('mousedown', (e) => {
+// Capture Mouse Rotation
+let yaw = 0, pitch = 0;
+document.addEventListener('mousemove', (e) => {
     if (document.pointerLockElement !== document.body) return;
+    yaw -= e.movementX * 0.0022;
+    pitch -= e.movementY * 0.0022;
+    pitch = Math.max(-Math.PI/2.1, Math.min(Math.PI/2.1, pitch));
+    
+    camera.rotation.set(0, 0, 0);
+    camera.rotateY(yaw);
+    camera.rotateX(pitch);
+});
 
-    // 1. LEFT CLICK: Build Snap Wall Structure
+// ── 4. FORTNITE SNAP BUILDING MECHANICS ──────────────────────
+const structures = [];
+const wallGeo = new THREE.BoxGeometry(4, 4, 0.3);
+const wallMat = new THREE.MeshStandardMaterial({ color: 0x92613c, roughness: 1.0 });
+
+document.addEventListener('mousedown', (e) => {
+    if (document.pointerLockElement !== document.body || gameState !== "PLAYING") return;
+
+    // LEFT CLICK: Place Wood Grid Snap Wall Panel
     if (e.button === 0) {
-        if (player.mats < 10) return; // Verify building materials availability
+        if (player.mats < 10) return;
         
         const wall = new THREE.Mesh(wallGeo, wallMat);
-        const lookDir = new THREE.Vector3();
-        camera.getWorldDirection(lookDir);
+        const dir = new THREE.Vector3();
+        camera.getWorldDirection(dir);
         
-        // Calculate Grid Position Snapping Vectors
-        wall.position.x = Math.round((camera.position.x + lookDir.x * 6) / 4) * 4;
-        wall.position.z = Math.round((camera.position.z + lookDir.z * 6) / 4) * 4;
-        wall.position.y = 2.0; // Dynamic height allocation baseline
+        // Grid Lock Snapping
+        wall.position.x = Math.round((camera.position.x + dir.x * 6) / 4) * 4;
+        wall.position.z = Math.round((camera.position.z + dir.z * 6) / 4) * 4;
+        wall.position.y = Math.round((camera.position.y + dir.y * 4) / 4) * 4;
+        if(wall.position.y < 2.0) wall.position.y = 2.0; // Floor safety stop
         
-        // Orient wall to align face parallel to coordinates grid
-        if (Math.abs(lookDir.x) > Math.abs(lookDir.z)) {
-            wall.rotation.y = Math.PI / 2;
-        }
+        if (Math.abs(dir.x) > Math.abs(dir.z)) wall.rotation.y = Math.PI / 2;
         
         scene.add(wall);
-        buildStructures.push(wall);
+        structures.push(wall);
         
         player.mats -= 10;
         document.getElementById('mats-val').innerText = player.mats;
     }
     
-    // 2. RIGHT CLICK: Fire OG Assault Rifle (Hitscan Bullet Tracers)
+    // RIGHT CLICK: Fire Bullet Tracers
     if (e.button === 2) {
-        const tracerGeo = new THREE.BoxGeometry(0.05, 0.05, 4);
-        const tracerMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+        const tracerGeo = new THREE.BoxGeometry(0.04, 0.04, 3);
+        const tracerMat = new THREE.MeshBasicMaterial({ color: 0xffea00 });
         const tracer = new THREE.Mesh(tracerGeo, tracerMat);
         
-        const forwardVector = new THREE.Vector3();
-        camera.getWorldDirection(forwardVector);
+        const dir = new THREE.Vector3();
+        camera.getWorldDirection(dir);
         
-        tracer.position.copy(camera.position).addScaledVector(forwardVector, 2);
-        tracer.lookAt(camera.position.clone().addScaledVector(forwardVector, 10));
+        tracer.position.copy(camera.position).addScaledVector(dir, 1.5);
+        tracer.lookAt(camera.position.clone().addScaledVector(dir, 12));
         scene.add(tracer);
         
-        // Automated cleanup cycle for tracer effects to preserve computational memory
-        setTimeout(() => {
-            scene.remove(tracer);
-        }, 60);
+        setTimeout(() => scene.remove(tracer), 50);
     }
 });
 
-// Deactivate alternative context menu windows during right-click target acquisition
 document.addEventListener('contextmenu', e => e.preventDefault());
 
-// ── 5. PHYSICAL TRANSFORMATION MATRIX & EXECUTION ENGINE LOOP ────
+// ── 5. RUNTIME PHYSICS ENVIRONMENT EXECUTOR LOOP ──────────────────
 function animate() {
     requestAnimationFrame(animate);
 
-    if (document.pointerLockElement === document.body) {
+    if (gameState === "PLAYING" && document.pointerLockElement === document.body) {
+        // Core horizontal orientation computation
         const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
         forward.y = 0; forward.normalize();
         const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
         right.y = 0; right.normalize();
 
-        let targetX = 0, targetZ = 0;
-        if (player.keys.w) { targetX += forward.x; targetZ += forward.z; }
-        if (player.keys.s) { targetX -= forward.x; targetZ -= forward.z; }
-        if (player.keys.a) { targetX -= right.x; targetZ -= right.z; }
-        if (player.keys.d) { targetX += right.x; targetZ += right.z; }
+        let moveX = 0, moveZ = 0;
+        if (player.keys.w) { moveX += forward.x; moveZ += forward.z; }
+        if (player.keys.s) { moveX -= forward.x; moveZ -= forward.z; }
+        if (player.keys.a) { moveX -= right.x; moveZ -= right.z; }
+        if (player.keys.d) { moveX += right.x; moveZ += right.z; }
 
-        camera.position.x += targetX * player.speed;
-        camera.position.z += targetZ * player.speed;
+        camera.position.x += moveX * player.speed;
+        camera.position.z += moveZ * player.speed;
 
-        // Apply Vertical Jump Forces & Gravitational Matrix Velocity
-        if (player.keys.space && player.canJump) {
+        // Apply Vertical Jump Matrices & Skydive Gravity drops
+        if (camera.position.y > player.height) {
+            // Skydive mode vs standard land fall speed
+            let gravity = (camera.position.y > 15) ? 0.05 : 0.012; 
+            player.velocity.y -= gravity;
+        } else if (player.keys.space && player.canJump) {
             player.velocity.y = 0.24;
             player.canJump = false;
         }
 
-        player.velocity.y -= 0.011; // Gravity coefficient factor
         camera.position.y += player.velocity.y;
 
+        // Ground collision matrix check
         if (camera.position.y <= player.height) {
             camera.position.y = player.height;
             player.velocity.y = 0;
@@ -186,7 +221,6 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-// Coordinate window boundary dimension adjustments smoothly on resize events
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
