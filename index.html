@@ -3,40 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AtlasRoyale ✦ Unblocked</title>
+    <title>Fortnite OG ✦ Play Free</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Secure Web Core Link to Three.js 3D Engine Library Layer -->
     <script src="https://cloudflare.com"></script>
 </head>
 <body>
-    <!-- Tactical Center Target Crosshair Ring -->
+    <!-- ── TRADITIONAL FORTNITE CORE HUD OVERLAY ── -->
     <div id="crosshair"></div>
-
-    <!-- Google Console Style Instructions Start Gate Window -->
-    <div id="blocker">
-        <div id="instructions">
-            <p style="font-size:38px; font-weight:600; letter-spacing:1px; margin-bottom:10px; color:#ffffff;">✦ ATLAS ROYALE ✦</p>
-            <p style="color:#00ffcc; font-size:16px; margin-top:0; margin-bottom:30px; text-transform:uppercase; letter-spacing:2px;">Browser Engine v1.0</p>
-            <div style="background-color:#111111; border:1px solid #222222; border-radius:12px; padding:20px; max-width:400px; margin:0 auto; text-align:left; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-                <p style="margin:5px 0; color:#fff;"><b>MOVE:</b> W, A, S, D Keys</p>
-                <p style="margin:5px 0; color:#fff;"><b>LOOK:</b> Move Mouse</p>
-                <p style="margin:5px 0; color:#fff;"><b>JUMP:</b> Spacebar</p>
-                <p style="margin:5px 0; color:#a855f7;"><b>BUILD WALL:</b> Right Click Mouse</p>
-            </div>
-            <p style="font-size:18px; margin-top:30px; color:#888888; animation: pulse 1.5s infinite;">Click Anywhere on Screen to Deploy & Play</p>
+    
+    <div id="game-hud" style="display: none;">
+        <div class="hud-top-left">
+            <div id="player-tag">CARTER_CREATOR</div>
+            <div class="bar-container health-bg"><div id="health-bar" style="width: 100%;"></div><span>100</span></div>
+            <div class="bar-container shield-bg"><div id="shield-bar" style="width: 0%;"></div><span>0</span></div>
+        </div>
+        <div class="hud-bottom-right">
+            <div id="mats-display">🪵 <span id="mats-val">100</span></div>
+            <div id="weapon-display">✏️ AR RIFLE<br><span style="font-size: 14px; color: #00ffcc;">UNLIMITED</span></div>
         </div>
     </div>
 
-    <!-- Local Style Configuration Layout Anchor for Pulse Animation -->
-    <style>
-        @keyframes pulse {
-            0% { opacity: 0.4; }
-            50% { opacity: 1; }
-            100% { opacity: 0.4; }
-        }
-    </style>
+    <!-- ── AUTHENTIC OG LOADING SCREEN OVERLAY ── -->
+    <div id="loading-screen">
+        <div id="loading-content">
+            <div id="game-logo">FORTNITE</div>
+            <div id="sub-logo">BATTLE ROYALE</div>
+            <div id="loading-tip">TIP: Use your wood resources wisely. Building walls can instantly block incoming rifle tracking lines!</div>
+            <div id="progress-container"><div id="progress-bar"></div></div>
+        </div>
+    </div>
 
-    <!-- Connects Your Custom 3D JavaScript Gaming Engine Script -->
+    <!-- ── GAME LAUNCH MENU LOBBY DECK ── -->
+    <div id="lobby-menu" style="display: none;">
+        <div id="lobby-header">
+            <div class="nav-tab active">PLAY</div>
+            <div class="nav-tab">LOCKER</div>
+            <div class="nav-tab">STORE</div>
+        </div>
+        <div id="player-showcase">
+            <div id="holo-character">✦</div>
+        </div>
+        <div id="match-panel">
+            <div style="font-size: 14px; color: #888; letter-spacing: 1px;">CHOOSE MODE</div>
+            <div style="font-size: 24px; font-weight: bold; margin: 4px 0 15px 0; color: #fff;">SOLO (OG MAP)</div>
+            <button id="play-button">PLAY</button>
+        </div>
+    </div>
+
     <script src="game.js"></script>
 </body>
 </html>
