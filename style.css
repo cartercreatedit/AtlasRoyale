@@ -1,0 +1,68 @@
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #05050a;
+    font-family: 'Google Sans', Arial, sans-serif;
+    user-select: none;
+}
+
+#blocker {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(5, 5, 10, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    color: #ffffff;
+    text-align: center;
+}
+
+#instructions {
+    background-color: #11111c;
+    border: 1px solid #222235;
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    max-width: 500px;
+}
+
+#crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #00ffcc;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 99;
+    pointer-events: none;
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+}
+
+#hud {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 90;
+}
+
+.hud-panel {
+    background: rgba(15, 15, 30, 0.75);
+    border: 1px solid #222244;
+    padding: 12px 24px;
+    border-radius: 16px;
+    color: #ffffff;
+    font-family: monospace;
+    font-size: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
